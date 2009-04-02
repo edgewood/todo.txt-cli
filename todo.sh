@@ -202,6 +202,7 @@ help()
         TODOTXT_DATE_ON_ADD=1           is same as option -t
         TODOTXT_VERBOSE=1               is same as option -v
         TODOTXT_DEFAULT_ACTION=""       run this when called with no arguments
+        TODOTXT_SORT_COMMAND="sort ..." customize list output
 EndHelp
 
     if [ -d "$HOME/.todo.actions.d" ]
@@ -340,6 +341,7 @@ TODOTXT_PRESERVE_LINE_NUMBERS=${TODOTXT_PRESERVE_LINE_NUMBERS:-1}
 TODOTXT_AUTO_ARCHIVE=${TODOTXT_AUTO_ARCHIVE:-1}
 TODOTXT_DATE_ON_ADD=${TODOTXT_DATE_ON_ADD:-0}
 TODOTXT_DEFAULT_ACTION=${TODOTXT_DEFAULT_ACTION:-}
+TODOTXT_SORT_COMMAND=${TODOTXT_SORT_COMMAND:-env LC_COLLATE=C sort -f -k2}
 
 [ -e "$TODOTXT_CFG_FILE" ] || {
     CFG_FILE_ALT="$HOME/.todo.cfg"
@@ -350,7 +352,7 @@ TODOTXT_DEFAULT_ACTION=${TODOTXT_DEFAULT_ACTION:-}
     fi
 }
 
-export TODOTXT_VERBOSE TODOTXT_PLAIN TODOTXT_CFG_FILE TODOTXT_FORCE TODOTXT_PRESERVE_LINE_NUMBERS TODOTXT_AUTO_ARCHIVE TODOTXT_DATE_ON_ADD
+export TODOTXT_VERBOSE TODOTXT_PLAIN TODOTXT_CFG_FILE TODOTXT_FORCE TODOTXT_PRESERVE_LINE_NUMBERS TODOTXT_AUTO_ARCHIVE TODOTXT_DATE_ON_ADD TODOTXT_SORT_COMMAND
 
 TODO_SH="$0"
 export TODO_SH
@@ -433,9 +435,6 @@ _list() {
         filter_command="${filter_command:-}${filter_command:+ | }${post_filter_command:-}"
     }
 
-    ## Allow a custom sort, but set a default
-    sort_command=${TODOTXT_SORT_COMMAND:-env LC_COLLATE=C sort -f -k2}
-
     ## Figure out how much padding we need to use
     ## We need one level of padding for each power of 10 $LINES uses
     LINES=$( sed -n '$ =' "$src" )
@@ -455,7 +454,7 @@ _list() {
             s/^  /00/;
             s/^ /0/;
           ''' \
-        | ${sort_command}                                       \
+        | ${TODOTXT_SORT_COMMAND}                               \
         | sed '''
             /^[0-9]\{'$PADDING'\} x /! {
                 s/\(.*(A).*\)/'$PRI_A'\1 '$DEFAULT'/g;
